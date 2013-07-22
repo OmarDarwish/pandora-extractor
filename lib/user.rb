@@ -12,9 +12,9 @@ module Pandora
     @@BASE_URL = "http://feeds.pandora.com/feeds/people/"
 
   	def initialize(user)
-  		@user = get_user_from_email(user) if email? user else user
-      @stations = []
+  		@user = get_user_from_email(user) if email? user else user      
       @STATONS_URL = @@BASE_URL + "#{user}/stations.xml"
+      @stations = parse_stations
   	end
 
   	def email? (user)
@@ -27,22 +27,30 @@ module Pandora
   	end
 
     def parse_stations
-      doc = Nokogiri::XML(open(@STATONS_URL))
-      items = doc.xpath('//rss/channel/item')
-      
-      items.each do |item|
-        station = Station.new        
-        #parse station xml
-        station.title = item.xpath('title').text
-        station.url = item.xpath('link').text
-        station.description = item.xpath('description').text
-        date = item.xpath('pubDate').text
-        station.date = DateTime.parse(item.xpath('pubDate').text) unless date.empty?  #Quickmix station has no date    
-        station.id = item.xpath('pandora:stationCode').text
-        station.album_art_url = item.xpath('pandora:stationAlbumArtImageUrl').text
-        station.seeds = parse_seeds item.xpath'pandora:seeds'
-        @stations << station
+      begin
+        doc = Nokogiri::XML(open(@STATONS_URL))
+      rescue
+        return nil #user is private or does not exist
       end
+      items = doc.xpath('//rss/channel/item')
+      stations = []
+      unless items.length == 0      
+        items.each do |item|
+          station = Station.new        
+          #parse station xml
+          station.title = item.xpath('title').text
+          station.url = item.xpath('link').text
+          station.description = item.xpath('description').text
+          date = item.xpath('pubDate').text
+          station.date = DateTime.parse(item.xpath('pubDate').text) unless date.empty?  #Quickmix station has no date    
+          station.id = item.xpath('pandora:stationCode').text
+          station.album_art_url = item.xpath('pandora:stationAlbumArtImageUrl').text
+          station.seeds = parse_seeds item.xpath'pandora:seeds'
+          stations << station                   
+        end        
+      end
+      
+      return stations
     end
     
     def parse_seeds(node)
