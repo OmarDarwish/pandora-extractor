@@ -1,6 +1,4 @@
 require_relative '../lib/user'
-require_relative '../lib/station'
-require_relative '../lib/seed'
 
 include Pandora
 
@@ -21,25 +19,20 @@ describe User, '#parse_stations' do
 
 	it "should return an array of Pandora::Station objects" do
 		user = User.new('om.drwsh')
-		user.parse_stations
 		user.stations.should have(12).stations #current number of statios for user om.drwsh as of 07/17/13
 	end
-	it "should return nil if the user has no satations" do
+	it "should return an empty array if the user has no stations" do
 		user = User.new('omarfdarwish') #this account has no stations
-		stations = user.parse_stations
-		stations.should be_instance_of(nil)
-		
+		user.stations.should have(0).stations		
 	end
 	it "should return nil if the user does not exist" do
 		user = User.new('thisuserdoesnotexist')
-		stations = user.parse_stations
-		stations.should be_instance_of(nil)
+		user.stations.should == nil
 	end
 		
 	it "should return nil if the user is private" do
 		user = User.new('vuhoaipham22')
-		stations = user.parse_stations
-		stations.should be_instance_of(nil)
+		user.stations.should == nil
 	end
 end
 
@@ -62,3 +55,4 @@ describe User, "#parse_seeds" do
   		parsed.should =~ seeds
   	end
 end
+
