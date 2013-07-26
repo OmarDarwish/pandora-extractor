@@ -14,7 +14,16 @@ describe User, '#new' do
 		end	
 	
 end
+describe User, "#each" do
+  it "should return each station for the given user" do
+    user = User.new 'om.drwsh'
+    user.parse_stations
 
+    col = []
+    user.each {|station| col << station}
+    col.should =~ user.stations
+  end
+end
 describe User, '#parse_stations' do
 
 	it "should return an array of Pandora::Station objects" do

@@ -57,10 +57,10 @@ describe Station, '#quickmix?' do
   end
 end
 
-describe Station, '#next' do
+describe Station, '#next_likes' do
   it "each like should have song, album, artist, and date" do
     station = Station.new id: 'sh1456242794242861817'
-    station.next.each do |like|
+    station.next_likes.each do |like|
       like.song.should_not be_nil
       like.album.should_not be_nil
       like.artist.should_not be_nil
@@ -69,12 +69,12 @@ describe Station, '#next' do
   end 
   it "should return an array of Likes" do
     station = Station.new id: 'sh1456242794242861817'
-    likes = station.next
+    likes = station.next_likes
     likes.each {|like| like.should be_instance_of Like}
   end
   it "should return nil if no more tracks retrieved" do
     station = Station.new id: 'sh1456242794242861817', like_index: 1000
-    station.next.should be_nil  
+    station.next_likes.should be_nil  
   end
 end
 
@@ -91,5 +91,21 @@ describe Station, '#parse_likes' do
   it "should return all Likes for a given station" do
     station = Station.new id: 'sh1456242794242861817'
     station.parse_likes.should have(25).likes
-  end   
+  end 
+
+  it "should return nil if quickmix station" do
+    station =  Station.new id: 'qm428960505'
+    station.parse_likes.should be_nil
+  end
+end
+
+describe Station, "#each" do
+  it "should return each like for the given station" do
+    station = Station.new id: 'sh1456242794242861817'
+    station.parse_likes
+
+    col = []
+    station.each {|like| col << like}
+    col.should =~ station.likes
+  end
 end

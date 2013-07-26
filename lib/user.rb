@@ -26,6 +26,10 @@ module Pandora
   		email.match(/.*@/)[0].chop
   	end
 
+    def each
+      @stations.each {|station| yield station}
+    end
+    
     def parse_stations
       begin
         doc = Nokogiri::XML(open(@STATONS_URL))

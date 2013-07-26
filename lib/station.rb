@@ -2,12 +2,13 @@ require_relative 'like'
 require 'nokogiri'
 require 'open-uri'
 require 'date'
-
+require 'debugger'
 
 module Pandora
 	class Station
 		attr_accessor :title, :url, :description, :date, :id,
-			:album_art_url, :seeds, :likes
+			:album_art_url, :seeds
+		attr_reader :likes
 
 		@@BASE_URL = 'http://www.pandora.com/content/station_track_thumbs'
 		@@HOMEPAGE = 'http://www.pandora.com'
@@ -23,7 +24,21 @@ module Pandora
 			@like_index = args[:like_index] || 0
 		end
 
-		def next
+		def each
+			@likes.each {|like| yield like}
+		end
+
+		def parse_likes
+			return nil if quickmix?
+			@likes = []
+			while grabbed = next_likes
+				grabbed.each {|like| @likes << like}
+				@like_index += grabbed.length
+			end			
+			return @likes
+		end
+
+		def next_likes
 			#attempt to open page
 			begin
 				url = @@BASE_URL + Station.encode_query(@like_index, Station.filter_id(@id))
@@ -68,10 +83,6 @@ module Pandora
 			return nil			
 		end		
 
-		def parse_date(date)
-			Date.strptime(date, "%m-%d-%Y")
-		end
-
 		def parse_album(url)
 			#attempt to open page
 			begin
@@ -83,6 +94,10 @@ module Pandora
 			 return doc.css('.album_title').first.text.gsub(/\Aon\s/,' ').strip #strip "on  " from album text
 			#album not found
 			return nil
+		end
+
+		def parse_date(date)
+			Date.strptime(date, "%m-%d-%Y")
 		end
 
 		def ==(other)
@@ -100,12 +115,6 @@ module Pandora
 			op[:posSortAsc] ||= 'true'
 			op[:posSortBy] ||= 'date'
 			return '?' + op.map { |k,v| "#{k}=#{v}"  }.join('&')
-		end
-
-		def self.filter_album(str)
-			str = str.downcase
-			sub = str.gsub(/(\W|_|the)/, ' ').squeeze(' ').strip
-			str = sub if sub
 		end
 
 		def self.filter_id(str)
